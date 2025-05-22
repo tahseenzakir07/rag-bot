@@ -39,7 +39,7 @@ def process_pdf(file_obj):
     chunks = text_splitter.split_text(text)
 
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vector_store = FAISS.from_texts(chunks, embeddings
+    vector_store = FAISS.from_texts(chunks, embeddings)
                                     
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3)
 
