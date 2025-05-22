@@ -9,7 +9,6 @@ from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 
-# Global state
 vector_store = None
 retrieval_chain = None
 api_key_set = False
@@ -36,18 +35,14 @@ def process_pdf(file_obj):
     if not text:
         return "❌ No text found in PDF."
 
-    # Split PDF text
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     chunks = text_splitter.split_text(text)
 
-    # Embed and store vectors
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vector_store = FAISS.from_texts(chunks, embeddings)
-
-    # Setup Gemini LLM
+    vector_store = FAISS.from_texts(chunks, embeddings
+                                    
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3)
 
-    # Prompt template
     prompt = ChatPromptTemplate.from_messages([
         ("system", "Answer using the context. Say 'I don't know' if not in context."),
         ("human", "Context: {context}\n\nQuestion: {input}")
@@ -67,13 +62,11 @@ def ask_question(question):
     result = retrieval_chain.invoke({"input": question})
     answer = result.get("answer", "🤷 No answer found.")
 
-    # Update chat history
     chat_history.append(f"**You:** {question}")
     chat_history.append(f"**Bot:** {answer}")
     chat_log = "\n".join(chat_history)
 
-    return "", chat_log  # Clear question input
-
+    return "", chat_log  
 
 def reset_all():
     global vector_store, retrieval_chain, api_key_set, chat_history
@@ -86,29 +79,22 @@ def reset_all():
 
     return "", "", "", "", ""
 
-
-# --- UI ---
 with gr.Blocks() as demo:
     gr.Markdown("## 🤖 AI RAG Chatbot")
 
-    # API Key Section
     api_key = gr.Textbox(label="🔑 Enter your Google API Key", type="password", placeholder="Paste your Google Gemini API key here")
     key_btn = gr.Button("Set API Key")
     key_status = gr.Textbox(label="API Key Status", interactive=False)
 
-    # PDF Upload and Process
     pdf_input = gr.File(label="📄 Upload PDF", file_types=[".pdf"])
     process_btn = gr.Button("Process PDF")
     status = gr.Textbox(label="Processing Status", interactive=False)
 
-    # Question and Chat Display
     question = gr.Textbox(label="Ask a Question", placeholder="Type your question and hit Enter")
     chatbox = gr.Textbox(label="Chat History", interactive=False, lines=20, show_copy_button=True)
 
-    # Reset Button
     reset_btn = gr.Button("🔄 Reset Chat")
-
-    # Hooking up logic
+    
     key_btn.click(set_api_key, inputs=[api_key], outputs=[key_status])
     process_btn.click(process_pdf, inputs=[pdf_input], outputs=[status])
     question.submit(ask_question, inputs=[question], outputs=[question, chatbox])
